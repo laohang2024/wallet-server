@@ -229,6 +229,17 @@
                 <version>${ruoyi.version}</version>
             </dependency>
 
+            <!-- 区块链模块-->
+            <dependency>
+                <groupId>com.ruoyi</groupId>
+                <artifactId>ruoyi-blockchain</artifactId>
+                <version>${ruoyi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.8.26</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -239,6 +250,7 @@
         <module>ruoyi-quartz</module>
         <module>ruoyi-generator</module>
         <module>ruoyi-common</module>
+        <module>ruoyi-blockchain</module>
     </modules>
     <packaging>pom</packaging>
 

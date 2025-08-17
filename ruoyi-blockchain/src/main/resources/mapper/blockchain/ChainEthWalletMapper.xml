@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.blockchain.mapper.ChainEthWalletMapper">
+    
+    <resultMap type="ChainEthWallet" id="ChainEthWalletResult">
+        <result property="address"    column="address"    />
+        <result property="ethBalance"    column="eth_balance"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="dbUpdateTime"    column="db_update_time"    />
+    </resultMap>
+
+    <sql id="selectChainEthWalletVo">
+        select address, eth_balance, create_time, update_time, db_update_time from chain_eth_wallet
+    </sql>
+
+    <select id="selectChainEthWalletList" parameterType="ChainEthWallet" resultMap="ChainEthWalletResult">
+        <include refid="selectChainEthWalletVo"/>
+        <where>  
+            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
+            <if test="params.beginEthBalance != null and params.beginEthBalance != '' and params.endEthBalance != null and params.endEthBalance != ''"> and eth_balance between #{params.beginEthBalance} and #{params.endEthBalance}</if>
+        </where>
+    </select>
+    
+    <select id="selectChainEthWalletByAddress" parameterType="String" resultMap="ChainEthWalletResult">
+        <include refid="selectChainEthWalletVo"/>
+        where address = #{address}
+    </select>
+
+    <insert id="insertChainEthWallet" parameterType="ChainEthWallet">
+        insert into chain_eth_wallet
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="address != null">address,</if>
+            <if test="ethBalance != null">eth_balance,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="dbUpdateTime != null">db_update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="address != null">#{address},</if>
+            <if test="ethBalance != null">#{ethBalance},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="dbUpdateTime != null">#{dbUpdateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateChainEthWallet" parameterType="ChainEthWallet">
+        update chain_eth_wallet
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ethBalance != null">eth_balance = #{ethBalance},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="dbUpdateTime != null">db_update_time = #{dbUpdateTime},</if>
+        </trim>
+        where address = #{address}
+    </update>
+
+    <delete id="deleteChainEthWalletByAddress" parameterType="String">
+        delete from chain_eth_wallet where address = #{address}
+    </delete>
+
+    <delete id="deleteChainEthWalletByAddresss" parameterType="String">
+        delete from chain_eth_wallet where address in 
+        <foreach item="address" collection="array" open="(" separator="," close=")">
+            #{address}
+        </foreach>
+    </delete>
+
+</mapper>

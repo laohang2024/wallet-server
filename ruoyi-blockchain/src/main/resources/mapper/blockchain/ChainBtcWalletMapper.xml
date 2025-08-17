@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.blockchain.mapper.ChainBtcWalletMapper">
+    
+    <resultMap type="ChainBtcWallet" id="ChainBtcWalletResult">
+        <result property="address"    column="address"    />
+        <result property="btcBalance"    column="btc_balance"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="dbUpdateTime"    column="db_update_time"    />
+    </resultMap>
+
+    <sql id="selectChainBtcWalletVo">
+        select address, btc_balance, create_time, update_time, db_update_time from chain_btc_wallet
+    </sql>
+
+    <select id="selectChainBtcWalletList" parameterType="ChainBtcWallet" resultMap="ChainBtcWalletResult">
+        <include refid="selectChainBtcWalletVo"/>
+        <where>  
+            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
+            <if test="params.beginBtcBalance != null and params.beginBtcBalance != '' and params.endBtcBalance != null and params.endBtcBalance != ''"> and btc_balance between #{params.beginBtcBalance} and #{params.endBtcBalance}</if>
+        </where>
+    </select>
+    
+    <select id="selectChainBtcWalletByAddress" parameterType="String" resultMap="ChainBtcWalletResult">
+        <include refid="selectChainBtcWalletVo"/>
+        where address = #{address}
+    </select>
+
+    <insert id="insertChainBtcWallet" parameterType="ChainBtcWallet">
+        insert into chain_btc_wallet
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="address != null and address != ''">address,</if>
+            <if test="btcBalance != null">btc_balance,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="dbUpdateTime != null">db_update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="btcBalance != null">#{btcBalance},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="dbUpdateTime != null">#{dbUpdateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateChainBtcWallet" parameterType="ChainBtcWallet">
+        update chain_btc_wallet
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="btcBalance != null">btc_balance = #{btcBalance},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="dbUpdateTime != null">db_update_time = #{dbUpdateTime},</if>
+        </trim>
+        where address = #{address}
+    </update>
+
+    <delete id="deleteChainBtcWalletByAddress" parameterType="String">
+        delete from chain_btc_wallet where address = #{address}
+    </delete>
+
+    <delete id="deleteChainBtcWalletByAddresss" parameterType="String">
+        delete from chain_btc_wallet where address in 
+        <foreach item="address" collection="array" open="(" separator="," close=")">
+            #{address}
+        </foreach>
+    </delete>
+
+</mapper>

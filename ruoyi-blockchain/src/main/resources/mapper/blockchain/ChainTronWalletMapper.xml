@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.blockchain.mapper.ChainTronWalletMapper">
+    
+    <resultMap type="ChainTronWallet" id="ChainTronWalletResult">
+        <result property="address"    column="address"    />
+        <result property="trxBalance"    column="trx_balance"    />
+        <result property="usdtBalance"    column="usdt_balance"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="dbUpdateTime"    column="db_update_time"    />
+    </resultMap>
+
+    <sql id="selectChainTronWalletVo">
+        select address, trx_balance, usdt_balance, create_time, update_time, db_update_time from chain_tron_wallet
+    </sql>
+
+    <select id="selectChainTronWalletList" parameterType="ChainTronWallet" resultMap="ChainTronWalletResult">
+        <include refid="selectChainTronWalletVo"/>
+        <where>  
+            <if test="trxBalance != null "> and trx_balance like concat('%', #{trxBalance}, '%')</if>
+            <if test="params.beginUsdtBalance != null and params.beginUsdtBalance != '' and params.endUsdtBalance != null and params.endUsdtBalance != ''"> and usdt_balance between #{params.beginUsdtBalance} and #{params.endUsdtBalance}</if>
+        </where>
+    </select>
+    
+    <select id="selectChainTronWalletByAddress" parameterType="String" resultMap="ChainTronWalletResult">
+        <include refid="selectChainTronWalletVo"/>
+        where address = #{address}
+    </select>
+
+    <insert id="insertChainTronWallet" parameterType="ChainTronWallet">
+        insert into chain_tron_wallet
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="address != null">address,</if>
+            <if test="trxBalance != null">trx_balance,</if>
+            <if test="usdtBalance != null">usdt_balance,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="dbUpdateTime != null">db_update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="address != null">#{address},</if>
+            <if test="trxBalance != null">#{trxBalance},</if>
+            <if test="usdtBalance != null">#{usdtBalance},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="dbUpdateTime != null">#{dbUpdateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateChainTronWallet" parameterType="ChainTronWallet">
+        update chain_tron_wallet
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="trxBalance != null">trx_balance = #{trxBalance},</if>
+            <if test="usdtBalance != null">usdt_balance = #{usdtBalance},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="dbUpdateTime != null">db_update_time = #{dbUpdateTime},</if>
+        </trim>
+        where address = #{address}
+    </update>
+
+    <delete id="deleteChainTronWalletByAddress" parameterType="String">
+        delete from chain_tron_wallet where address = #{address}
+    </delete>
+
+    <delete id="deleteChainTronWalletByAddresss" parameterType="String">
+        delete from chain_tron_wallet where address in 
+        <foreach item="address" collection="array" open="(" separator="," close=")">
+            #{address}
+        </foreach>
+    </delete>
+
+</mapper>
