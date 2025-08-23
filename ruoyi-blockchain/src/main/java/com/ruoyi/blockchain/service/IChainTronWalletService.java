@@ -58,4 +58,6 @@ public interface IChainTronWalletService
      * @return 结果
      */
     public int deleteChainTronWalletByAddress(String address);
+
+    public List<ChainTronWallet> selectChainTronWalletListByAddresss(String[] addresss);
 }

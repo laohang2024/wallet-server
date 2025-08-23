@@ -54,7 +54,6 @@ public class ChainEthWalletServiceImpl implements IChainEthWalletService
     @Override
     public int insertChainEthWallet(ChainEthWallet chainEthWallet)
     {
-        chainEthWallet.setCreateTime(DateUtils.getNowDate());
         return chainEthWalletMapper.insertChainEthWallet(chainEthWallet);
     }
 
@@ -67,7 +66,6 @@ public class ChainEthWalletServiceImpl implements IChainEthWalletService
     @Override
     public int updateChainEthWallet(ChainEthWallet chainEthWallet)
     {
-        chainEthWallet.setUpdateTime(DateUtils.getNowDate());
         return chainEthWalletMapper.updateChainEthWallet(chainEthWallet);
     }
 

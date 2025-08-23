@@ -1,5 +1,6 @@
 package com.ruoyi.blockchain.domain;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -14,7 +15,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * @author ruoyi
  * @date 2025-08-16
  */
-public class ChainTronWallet extends BaseEntity
+public class ChainTronWallet implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -28,6 +29,10 @@ public class ChainTronWallet extends BaseEntity
     /** usdt余额 */
     @Excel(name = "usdt余额")
     private BigDecimal usdtBalance;
+
+    private Long createTime;
+
+    private Long updateTime;
 
     /** 数据库更新时间 */
     private Date dbUpdateTime;
@@ -70,6 +75,22 @@ public class ChainTronWallet extends BaseEntity
     public Date getDbUpdateTime() 
     {
         return dbUpdateTime;
+    }
+
+    public Long getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Long createTime) {
+        this.createTime = createTime;
+    }
+
+    public Long getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Long updateTime) {
+        this.updateTime = updateTime;
     }
 
     @Override

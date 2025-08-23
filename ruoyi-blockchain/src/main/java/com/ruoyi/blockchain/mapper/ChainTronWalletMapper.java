@@ -58,4 +58,7 @@ public interface ChainTronWalletMapper
      * @return 结果
      */
     public int deleteChainTronWalletByAddresss(String[] addresss);
+
+
+    public List<ChainTronWallet> selectChainTronWalletListByAddresss(String[] addresss);
 }

@@ -73,4 +73,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
+    <select id="selectChainTronWalletListByAddresss" parameterType="String" resultMap="ChainTronWalletResult">
+        select * from chain_tron_wallet where address in
+        <foreach item="address" collection="array" open="(" separator="," close=")">
+            #{address}
+        </foreach>
+    </select>
+
 </mapper>

@@ -54,7 +54,6 @@ public class ChainTronWalletServiceImpl implements IChainTronWalletService
     @Override
     public int insertChainTronWallet(ChainTronWallet chainTronWallet)
     {
-        chainTronWallet.setCreateTime(DateUtils.getNowDate());
         return chainTronWalletMapper.insertChainTronWallet(chainTronWallet);
     }
 
@@ -67,7 +66,6 @@ public class ChainTronWalletServiceImpl implements IChainTronWalletService
     @Override
     public int updateChainTronWallet(ChainTronWallet chainTronWallet)
     {
-        chainTronWallet.setUpdateTime(DateUtils.getNowDate());
         return chainTronWalletMapper.updateChainTronWallet(chainTronWallet);
     }
 
@@ -93,5 +91,17 @@ public class ChainTronWalletServiceImpl implements IChainTronWalletService
     public int deleteChainTronWalletByAddress(String address)
     {
         return chainTronWalletMapper.deleteChainTronWalletByAddress(address);
+    }
+
+    /**
+     * 删除TRON钱包信息
+     *
+     * @param address TRON钱包主键
+     * @return 结果
+     */
+    @Override
+    public List<ChainTronWallet> selectChainTronWalletListByAddresss(String[] addresss)
+    {
+        return chainTronWalletMapper.selectChainTronWalletListByAddresss(addresss);
     }
 }

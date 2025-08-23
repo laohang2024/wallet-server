@@ -151,3 +151,13 @@ swagger:
 #自定义参数
 customParam:
   tokenFilePath: /Users/combo/work/okxe/store/tokens
+
+tron:
+  netType: Mainnet
+  apiKeyName: testOne
+  apiKey: 70d2b563-ee20-4467-89e8-c52c38484249
+  base58CheckAddress: TAPWZ2j4HX4fzifftPzUeocswy8LJFmhA6
+  hexAddress: 410498a2555e048da3a7449fcfe0dcae1b19dee9b8
+  privateKey: f422da42073625c707e98f8023ef6a0f12516e6327630762564ffa63d16d3fa4
+  publicKey: 92ce4cb37145146e5d0f8b0ac8204f60a7692345ec00684093ac4534f22bfa8159dc1c592e305bfa934a91b491cba18d80576c73a609b04bb4a53bb0e40b6518
+  contractAddress: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t

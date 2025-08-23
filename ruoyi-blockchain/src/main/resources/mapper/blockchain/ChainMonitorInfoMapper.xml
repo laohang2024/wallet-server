@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.blockchain.mapper.ChainMonitorInfoMapper">
+    
+    <resultMap type="ChainMonitorInfo" id="ChainMonitorInfoResult">
+        <result property="chainType"    column="chain_type"    />
+        <result property="blockNum"    column="block_num"    />
+    </resultMap>
+
+    <sql id="selectChainMonitorInfoVo">
+        select chain_type, block_num from chain_monitor_info
+    </sql>
+
+    <select id="selectChainMonitorInfoList" parameterType="ChainMonitorInfo" resultMap="ChainMonitorInfoResult">
+        <include refid="selectChainMonitorInfoVo"/>
+        <where>  
+            <if test="blockNum != null "> and block_num = #{blockNum}</if>
+        </where>
+    </select>
+    
+    <select id="selectChainMonitorInfoByChainType" parameterType="String" resultMap="ChainMonitorInfoResult">
+        <include refid="selectChainMonitorInfoVo"/>
+        where chain_type = #{chainType}
+    </select>
+
+    <insert id="insertChainMonitorInfo" parameterType="ChainMonitorInfo">
+        insert into chain_monitor_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="chainType != null">chain_type,</if>
+            <if test="blockNum != null">block_num,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="chainType != null">#{chainType},</if>
+            <if test="blockNum != null">#{blockNum},</if>
+         </trim>
+    </insert>
+
+    <update id="updateChainMonitorInfo" parameterType="ChainMonitorInfo">
+        update chain_monitor_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="blockNum != null">block_num = #{blockNum},</if>
+        </trim>
+        where chain_type = #{chainType}
+    </update>
+
+    <delete id="deleteChainMonitorInfoByChainType" parameterType="String">
+        delete from chain_monitor_info where chain_type = #{chainType}
+    </delete>
+
+    <delete id="deleteChainMonitorInfoByChainTypes" parameterType="String">
+        delete from chain_monitor_info where chain_type in 
+        <foreach item="chainType" collection="array" open="(" separator="," close=")">
+            #{chainType}
+        </foreach>
+    </delete>
+
+    <update id="addBlockNum" parameterType="String">
+        update chain_monitor_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="blockNum != null">block_num = block_num + 1,</if>
+        </trim>
+        where chain_type = #{chainType}
+    </update>
+
+
+</mapper>

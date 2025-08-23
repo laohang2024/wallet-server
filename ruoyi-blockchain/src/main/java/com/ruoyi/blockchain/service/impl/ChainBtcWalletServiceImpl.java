@@ -54,7 +54,6 @@ public class ChainBtcWalletServiceImpl implements IChainBtcWalletService
     @Override
     public int insertChainBtcWallet(ChainBtcWallet chainBtcWallet)
     {
-        chainBtcWallet.setCreateTime(DateUtils.getNowDate());
         return chainBtcWalletMapper.insertChainBtcWallet(chainBtcWallet);
     }
 
@@ -67,7 +66,6 @@ public class ChainBtcWalletServiceImpl implements IChainBtcWalletService
     @Override
     public int updateChainBtcWallet(ChainBtcWallet chainBtcWallet)
     {
-        chainBtcWallet.setUpdateTime(DateUtils.getNowDate());
         return chainBtcWalletMapper.updateChainBtcWallet(chainBtcWallet);
     }
 

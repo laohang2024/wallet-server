@@ -55,4 +55,8 @@ public class InnerBlockchainServer {
         }
         return bAccountInfoList;
     }
+
+    public void monitorTron(){
+        
+    }
 }
