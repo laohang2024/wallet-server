@@ -58,4 +58,6 @@ public interface IMchChainWalletInfoService
      * @return 结果
      */
     public int deleteMchChainWalletInfoById(String id);
+
+    public MchChainWalletInfo selectMchChainWalletInfoByAddress(String address, String chainType);
 }

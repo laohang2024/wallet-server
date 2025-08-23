@@ -46,7 +46,7 @@ public class UsdtTrade extends BaseEntity
 
     /** 是否已通知 0-未通知 1-已通知 */
     @Excel(name = "是否已通知 0-未通知 1-已通知")
-    private Long isNotify;
+    private byte isNotify;
 
     public void setTxHash(String txHash) 
     {
@@ -118,12 +118,12 @@ public class UsdtTrade extends BaseEntity
         return blockNum;
     }
 
-    public void setIsNotify(Long isNotify) 
+    public void setIsNotify(byte isNotify)
     {
         this.isNotify = isNotify;
     }
 
-    public Long getIsNotify() 
+    public byte getIsNotify()
     {
         return isNotify;
     }

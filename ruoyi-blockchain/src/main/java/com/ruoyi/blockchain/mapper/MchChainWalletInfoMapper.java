@@ -1,19 +1,20 @@
 package com.ruoyi.blockchain.mapper;
 
 import java.util.List;
+
 import com.ruoyi.blockchain.domain.MchChainWalletInfo;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 商户用户钱包Mapper接口
- * 
+ *
  * @author ruoyi
  * @date 2025-08-16
  */
-public interface MchChainWalletInfoMapper 
-{
+public interface MchChainWalletInfoMapper {
     /**
      * 查询商户用户钱包
-     * 
+     *
      * @param id 商户用户钱包主键
      * @return 商户用户钱包
      */
@@ -21,7 +22,7 @@ public interface MchChainWalletInfoMapper
 
     /**
      * 查询商户用户钱包列表
-     * 
+     *
      * @param mchChainWalletInfo 商户用户钱包
      * @return 商户用户钱包集合
      */
@@ -29,7 +30,7 @@ public interface MchChainWalletInfoMapper
 
     /**
      * 新增商户用户钱包
-     * 
+     *
      * @param mchChainWalletInfo 商户用户钱包
      * @return 结果
      */
@@ -37,7 +38,7 @@ public interface MchChainWalletInfoMapper
 
     /**
      * 修改商户用户钱包
-     * 
+     *
      * @param mchChainWalletInfo 商户用户钱包
      * @return 结果
      */
@@ -45,7 +46,7 @@ public interface MchChainWalletInfoMapper
 
     /**
      * 删除商户用户钱包
-     * 
+     *
      * @param id 商户用户钱包主键
      * @return 结果
      */
@@ -53,9 +54,11 @@ public interface MchChainWalletInfoMapper
 
     /**
      * 批量删除商户用户钱包
-     * 
+     *
      * @param ids 需要删除的数据主键集合
      * @return 结果
      */
     public int deleteMchChainWalletInfoByIds(String[] ids);
+
+    public MchChainWalletInfo selectMchChainWalletInfoByAddress(@Param("address") String address, @Param("chainType") String chainType);
 }

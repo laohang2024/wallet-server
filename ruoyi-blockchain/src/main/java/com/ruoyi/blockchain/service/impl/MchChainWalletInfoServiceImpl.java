@@ -91,4 +91,11 @@ public class MchChainWalletInfoServiceImpl implements IMchChainWalletInfoService
     {
         return mchChainWalletInfoMapper.deleteMchChainWalletInfoById(id);
     }
+
+    @Override
+    public MchChainWalletInfo selectMchChainWalletInfoByAddress(String address,String chainType) {
+        return mchChainWalletInfoMapper.selectMchChainWalletInfoByAddress(address,chainType);
+    }
+
+
 }

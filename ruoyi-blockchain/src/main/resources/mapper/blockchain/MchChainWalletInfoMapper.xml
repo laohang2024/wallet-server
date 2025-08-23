@@ -79,4 +79,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
+
+    <select id="selectMchChainWalletInfoByAddress" resultMap="MchChainWalletInfoResult">
+        <include refid="selectMchChainWalletInfoVo"/>
+        where address = #{address} and chain_type = #{chainType}
+    </select>
 </mapper>
