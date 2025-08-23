@@ -126,11 +126,6 @@ public class BlockchainTask {
             }
 
             List<String> toAddressList = new ArrayList<>(usdtTradeMap.keySet());
-            if (toAddressList.isEmpty()) {
-                logger.info("没有任保数据不处理");
-                return;
-            }
-            List<ChainTronWallet> saveList = new ArrayList<>();
 
             List<ChainTronWallet> walletList = chainTronWalletService.selectChainTronWalletListByAddresss(toAddressList.toArray(new String[0]));
             logger.info("{}", JSON.toJSONString(walletList));
@@ -143,11 +138,11 @@ public class BlockchainTask {
                     logger.error("插入数据失败,{}", e.getMessage(), e);
                 }
             }
-
+            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("监听TRON链异常了{}", e.getMessage(), e);
         }
-        chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
+
         apiWrapper.close();
 
     }
