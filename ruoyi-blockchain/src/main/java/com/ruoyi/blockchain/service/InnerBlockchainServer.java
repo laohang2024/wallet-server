@@ -70,6 +70,7 @@ public class InnerBlockchainServer {
                 ChainTronWallet chainWallet = new ChainTronWallet();
                 chainWallet.setAddress(walletModule.getAddress());
                 chainWallet.setCreateTime(System.currentTimeMillis());
+                chainWallet.setUpdateTime(System.currentTimeMillis());
                 chainWallet.setUsdtBalance(BigDecimal.ZERO);
                 chainWallet.setTrxBalance(BigDecimal.ZERO);
                 chainTronWalletService.insertChainTronWallet(chainWallet);
@@ -77,12 +78,14 @@ public class InnerBlockchainServer {
                 ChainEthWallet chainWallet = new ChainEthWallet();
                 chainWallet.setAddress(walletModule.getAddress());
                 chainWallet.setCreateTime(System.currentTimeMillis());
+                chainWallet.setUpdateTime(System.currentTimeMillis());
                 chainWallet.setEthBalance(BigDecimal.ZERO);
                 chainEthWalletService.insertChainEthWallet(chainWallet);
             }else if (chainType.equals(ChainType.BTC)){
                 ChainBtcWallet chainWallet = new ChainBtcWallet();
                 chainWallet.setAddress(walletModule.getAddress());
                 chainWallet.setCreateTime(System.currentTimeMillis());
+                chainWallet.setUpdateTime(System.currentTimeMillis());
                 chainWallet.setBtcBalance(BigDecimal.ZERO);
                 chainBtcWalletService.insertChainBtcWallet(chainWallet);
             }
