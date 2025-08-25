@@ -128,8 +128,11 @@ public class NotifyTask {
                 param.put("sign", DigestUtil.md5Hex(signStr));
                 String request = HttpUtil.post(url, param);
                 Integer notifyCnt = usdtTrade.getNotifyCnt();
-                if("success".equalsIgnoreCase(request) || notifyCnt >= 6) {
+                if("success".equalsIgnoreCase(request)) {
                     byte notifyFlag = 1;
+                    usdtTrade.setIsNotify(notifyFlag);
+                }else if (!"success".equalsIgnoreCase(request) && notifyCnt >= 6){
+                    byte notifyFlag = 2;
                     usdtTrade.setIsNotify(notifyFlag);
                 }
                 usdtTrade.setNotifyCnt(notifyCnt + 1);
