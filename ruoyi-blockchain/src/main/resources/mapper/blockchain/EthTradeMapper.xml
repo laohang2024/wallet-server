@@ -67,6 +67,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="txTime != null">tx_time = #{txTime},</if>
             <if test="blockNum != null">block_num = #{blockNum},</if>
             <if test="isNotify != null">is_notify = #{isNotify},</if>
+            <if test="notifyCnt != null">notify_cnt = #{notifyCnt},</if>
         </trim>
         where tx_hash = #{txHash}
     </update>
