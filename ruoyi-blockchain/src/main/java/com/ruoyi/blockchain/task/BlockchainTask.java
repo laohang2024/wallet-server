@@ -4,12 +4,14 @@ import com.alibaba.fastjson2.JSON;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.ruoyi.blockchain.chain.core.ChainType;
-import com.ruoyi.blockchain.conf.TronConfig;
 import com.ruoyi.blockchain.constant.TronConstants;
 import com.ruoyi.blockchain.domain.ChainMonitorInfo;
 import com.ruoyi.blockchain.domain.ChainTronWallet;
 import com.ruoyi.blockchain.domain.UsdtTrade;
-import com.ruoyi.blockchain.service.*;
+import com.ruoyi.blockchain.service.ApiWrapperService;
+import com.ruoyi.blockchain.service.IChainMonitorInfoService;
+import com.ruoyi.blockchain.service.IChainTronWalletService;
+import com.ruoyi.blockchain.service.IUsdtTradeService;
 import com.ruoyi.blockchain.util.BlockUtil;
 import com.ruoyi.blockchain.util.TransactionUtil;
 import org.bouncycastle.util.encoders.Hex;
@@ -33,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component("blockchainTask")
 public class BlockchainTask {
@@ -51,7 +52,7 @@ public class BlockchainTask {
     @Resource
     private IChainMonitorInfoService chainMonitorInfoService;
 
-    public void runTronMonitorTron() {
+    public void runTronMonitor() {
         logger.info("监听TRON链");
         ApiWrapper apiWrapper = apiWrapperService.create();
         try {

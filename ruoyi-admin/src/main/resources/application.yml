@@ -161,3 +161,7 @@ tron:
   privateKey: f422da42073625c707e98f8023ef6a0f12516e6327630762564ffa63d16d3fa4
   publicKey: 92ce4cb37145146e5d0f8b0ac8204f60a7692345ec00684093ac4534f22bfa8159dc1c592e305bfa934a91b491cba18d80576c73a609b04bb4a53bb0e40b6518
   contractAddress: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
+
+eth:
+  jsonRpcUrl: https://serene-restless-dream.quiknode.pro/f58ec5283bfbc5cbf41f59157d0185ffc3cfb13d/
+  monitorSwitch: true

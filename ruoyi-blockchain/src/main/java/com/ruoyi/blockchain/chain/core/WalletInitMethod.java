@@ -30,7 +30,6 @@ public class WalletInitMethod {
      * 以太创建keyStore
      * ps:password自己改哦，现在我写死的是123456
      * @return Bip39Wallet
-     * @throws CipherException Exception
      * @throws IOException Exception
      */
     public static Bip39Wallet createWalletEthereum() throws CipherException, IOException {
