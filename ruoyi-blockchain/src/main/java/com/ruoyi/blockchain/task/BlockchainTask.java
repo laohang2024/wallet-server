@@ -127,7 +127,11 @@ public class BlockchainTask {
             }
 
             List<String> toAddressList = new ArrayList<>(usdtTradeMap.keySet());
-
+            if(toAddressList.isEmpty()){
+                logger.info("未找监听到任何地址");
+                chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
+                return;
+            }
             List<ChainTronWallet> walletList = chainTronWalletService.selectChainTronWalletListByAddresss(toAddressList.toArray(new String[0]));
             logger.info("{}", JSON.toJSONString(walletList));
 

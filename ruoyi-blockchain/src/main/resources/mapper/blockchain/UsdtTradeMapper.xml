@@ -13,10 +13,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="txTime"    column="tx_time"    />
         <result property="blockNum"    column="block_num"    />
         <result property="isNotify"    column="is_notify"    />
+        <result property="notifyCnt"    column="notify_cnt"    />
     </resultMap>
 
     <sql id="selectUsdtTradeVo">
-        select tx_hash, from_address, to_address, amount, contract_address, tx_time, block_num, is_notify from usdt_trade
+        select tx_hash, from_address, to_address, amount, contract_address, tx_time, block_num, is_notify ,notify_cnt from usdt_trade
     </sql>
 
     <select id="selectUsdtTradeList" parameterType="UsdtTrade" resultMap="UsdtTradeResult">

@@ -164,4 +164,4 @@ tron:
 
 eth:
   jsonRpcUrl: https://serene-restless-dream.quiknode.pro/f58ec5283bfbc5cbf41f59157d0185ffc3cfb13d/
-  monitorSwitch: true
+  monitorSwitch: false

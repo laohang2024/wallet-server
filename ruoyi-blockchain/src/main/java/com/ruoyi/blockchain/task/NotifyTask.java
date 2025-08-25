@@ -1,37 +1,20 @@
 package com.ruoyi.blockchain.task;
 
-import cn.hutool.core.lang.Dict;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson2.JSON;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 import com.ruoyi.blockchain.chain.core.ChainType;
-import com.ruoyi.blockchain.constant.TronConstants;
-import com.ruoyi.blockchain.domain.*;
-import com.ruoyi.blockchain.service.*;
-import com.ruoyi.blockchain.util.BlockUtil;
-import com.ruoyi.blockchain.util.TransactionUtil;
-import com.ruoyi.common.utils.DictUtils;
-import com.ruoyi.common.utils.http.HttpUtils;
-import org.bouncycastle.util.encoders.Hex;
+import com.ruoyi.blockchain.domain.EthTrade;
+import com.ruoyi.blockchain.domain.MchChainWalletInfo;
+import com.ruoyi.blockchain.domain.UsdtTrade;
+import com.ruoyi.blockchain.service.IEthTradeService;
+import com.ruoyi.blockchain.service.IMchChainWalletInfoService;
+import com.ruoyi.blockchain.service.IUsdtTradeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.tron.trident.abi.TypeDecoder;
-import org.tron.trident.abi.datatypes.Address;
-import org.tron.trident.abi.datatypes.NumericType;
-import org.tron.trident.abi.datatypes.generated.Uint256;
-import org.tron.trident.core.ApiWrapper;
-import org.tron.trident.proto.Chain;
-import org.tron.trident.proto.Contract;
-import org.tron.trident.proto.Response;
-import org.tron.trident.utils.Base58Check;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +56,9 @@ public class NotifyTask {
                 MchChainWalletInfo walletInfo = mchChainWalletInfoService.selectMchChainWalletInfoByAddress(ethTrade.getToAddress(), ChainType.ETH.toString().toUpperCase());
                 if (walletInfo == null) {
                     logger.info("未找到商户ETH钱包信息,暂不处理");
+                    byte notifyFlag = 2;
+                    ethTrade.setIsNotify(notifyFlag);
+                    ethTradeService.updateEthTrade(ethTrade);
                     continue;
                 }
 
@@ -92,6 +78,16 @@ public class NotifyTask {
                                 "|" + param.get("hashCode") + "|" + param.get("timestamp") + "|" + param.get("amount") + "|973174ded83451641b3252695f5191bb";
                 param.put("sign", DigestUtil.md5Hex(signStr));
                 String request = HttpUtil.post(url, param);
+                Integer notifyCnt = ethTrade.getNotifyCnt();
+                if("success".equalsIgnoreCase(request)) {
+                    byte notifyFlag = 1;
+                    ethTrade.setIsNotify(notifyFlag);
+                }else if (!"success".equalsIgnoreCase(request) && notifyCnt >= 6){
+                    byte notifyFlag = 2;
+                    ethTrade.setIsNotify(notifyFlag);
+                }
+                ethTrade.setNotifyCnt(notifyCnt + 1);
+                ethTradeService.updateEthTrade(ethTrade);
                 logger.info("ETH回调返回:{}", request);
             } catch (Exception e) {
                 logger.error("回调失败", e);
@@ -108,6 +104,9 @@ public class NotifyTask {
             try {
                 MchChainWalletInfo walletInfo = mchChainWalletInfoService.selectMchChainWalletInfoByAddress(usdtTrade.getToAddress(), ChainType.TRON.toString().toUpperCase());
                 if (walletInfo == null) {
+                    byte notifyFlag = 2;
+                    usdtTrade.setIsNotify(notifyFlag);
+                    usdtTradeService.updateUsdtTrade(usdtTrade);
                     logger.info("未找到商户USDT钱包信息,暂不处理");
                     continue;
                 }
@@ -128,6 +127,13 @@ public class NotifyTask {
                                 "|" + param.get("hashCode") + "|" + param.get("timestamp") + "|" + param.get("amount") + "|973174ded83451641b3252695f5191bb";
                 param.put("sign", DigestUtil.md5Hex(signStr));
                 String request = HttpUtil.post(url, param);
+                Integer notifyCnt = usdtTrade.getNotifyCnt();
+                if("success".equalsIgnoreCase(request) || notifyCnt >= 6) {
+                    byte notifyFlag = 1;
+                    usdtTrade.setIsNotify(notifyFlag);
+                }
+                usdtTrade.setNotifyCnt(notifyCnt + 1);
+                usdtTradeService.updateUsdtTrade(usdtTrade);
                 logger.info("USDT回调返回:{}", request);
             } catch (Exception e) {
                 logger.error("回调失败", e);

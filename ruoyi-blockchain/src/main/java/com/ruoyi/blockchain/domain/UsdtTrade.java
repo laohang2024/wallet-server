@@ -48,6 +48,16 @@ public class UsdtTrade extends BaseEntity
     @Excel(name = "是否已通知 0-未通知 1-已通知")
     private byte isNotify;
 
+    public Integer getNotifyCnt() {
+        return notifyCnt;
+    }
+
+    public void setNotifyCnt(Integer notifyCnt) {
+        this.notifyCnt = notifyCnt;
+    }
+
+    private Integer notifyCnt;
+
     public void setTxHash(String txHash) 
     {
         this.txHash = txHash;
