@@ -40,7 +40,7 @@ public class EthRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (!ethConfig.isMonitorSwitch()) {
-            logger.info("未开启监听开关");
+            logger.info("未开启监听ETH开关");
             return;
         }
         logger.info("EthRunner start -------------------------------");

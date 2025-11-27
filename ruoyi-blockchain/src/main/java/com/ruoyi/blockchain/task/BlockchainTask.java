@@ -1,6 +1,8 @@
 package com.ruoyi.blockchain.task;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.ruoyi.blockchain.chain.core.ChainType;
@@ -8,10 +10,7 @@ import com.ruoyi.blockchain.constant.TronConstants;
 import com.ruoyi.blockchain.domain.ChainMonitorInfo;
 import com.ruoyi.blockchain.domain.ChainTronWallet;
 import com.ruoyi.blockchain.domain.UsdtTrade;
-import com.ruoyi.blockchain.service.ApiWrapperService;
-import com.ruoyi.blockchain.service.IChainMonitorInfoService;
-import com.ruoyi.blockchain.service.IChainTronWalletService;
-import com.ruoyi.blockchain.service.IUsdtTradeService;
+import com.ruoyi.blockchain.service.*;
 import com.ruoyi.blockchain.util.BlockUtil;
 import com.ruoyi.blockchain.util.TransactionUtil;
 import org.bouncycastle.util.encoders.Hex;
@@ -31,10 +30,7 @@ import org.tron.trident.utils.Base58Check;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component("blockchainTask")
 public class BlockchainTask {
@@ -53,7 +49,8 @@ public class BlockchainTask {
     private IChainMonitorInfoService chainMonitorInfoService;
 
     public void runTronMonitor() {
-        logger.info("监听TRON链");
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        logger.info("{} -监听TRON链", uuid);
         ApiWrapper apiWrapper = apiWrapperService.create();
         try {
             ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.TRON.toString().toUpperCase());
@@ -61,7 +58,7 @@ public class BlockchainTask {
 
             Response.BlockExtention blockExtention = apiWrapper.getBlockByNum(blockNum);
             String blockId = BlockUtil.parseBlockId(blockExtention);
-            logger.info("区块高度：{} , 区块ID：{}", blockNum, blockId);
+            logger.info("{} - 区块高度：{} , 区块ID：{}", uuid, blockNum, blockId);
             Map<String, UsdtTrade> usdtTradeMap = new HashMap<>();
             for (Response.TransactionExtention transactionExtention : blockExtention.getTransactionsList()) {
                 Chain.Transaction transaction = transactionExtention.getTransaction();
@@ -71,7 +68,7 @@ public class BlockchainTask {
                 String tid = TransactionUtil.getTransactionId(transaction);
 
                 if (!status) {
-                    logger.info("交易不成功,不处理 {}", tid);
+                    logger.info("{} - 交易不成功,不处理 {}", uuid, tid);
                     continue;
                 }
                 Chain.Transaction.Contract.ContractType contractType = transaction.getRawData().getContract(0).getType();
@@ -79,7 +76,7 @@ public class BlockchainTask {
                     //logger.info("不是USDT交易,不处理 {}", tid);
                     continue;
                 }
-                logger.info("USDT交易,进行处理 {}", tid);
+                logger.info("{} - USDT交易,进行处理 {}", uuid, tid);
                 // 合约
                 Chain.Transaction.Contract contract = transaction.getRawData().getContract(0);
                 // parameter
@@ -93,7 +90,7 @@ public class BlockchainTask {
                 // 函数选择器，必须为【a9059cbb】
                 String funcId = data.substring(0, 8);
                 if (!TronConstants.TRANSFER_FUNC_ID_BY_KECCAK256.equals(funcId)) {
-                    logger.info("不是标准转账函数,不处理");
+                    logger.info("{} - 不是标准转账函数,不处理", uuid);
                     continue;
                     //throw new Exception(funcId + "不是标准转账函数！");
                 }
@@ -127,8 +124,8 @@ public class BlockchainTask {
             }
 
             List<String> toAddressList = new ArrayList<>(usdtTradeMap.keySet());
-            if(toAddressList.isEmpty()){
-                logger.info("未找监听到任何地址");
+            if (toAddressList.isEmpty()) {
+                logger.info("{} - 未找监听到任何地址", uuid);
                 chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
                 return;
             }
@@ -140,15 +137,77 @@ public class BlockchainTask {
                 try {
                     usdtTradeService.insertUsdtTrade(usdtTrade);
                 } catch (Exception e) {
-                    logger.error("插入数据失败,{}", e.getMessage(), e);
+                    logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
                 }
             }
             chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
-            logger.error("监听TRON链异常了{}", e.getMessage(), e);
+            logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
         }
 
         apiWrapper.close();
+
+    }
+
+    @Resource
+    TokenViewService tokenViewService;
+
+    public void runBtcMonitor() {
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        logger.info("{} - 监听BTC链", uuid);
+        try {
+            ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.BTC.toString().toUpperCase());
+            long blockNum = chainMonitorInfo.getBlockNum();
+            Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.BTC.toString().toLowerCase());
+            logger.info("{} - BTC区块[{}]交易数{}", uuid, blockNum, txCnt);
+            if (txCnt == 0) {
+                return;
+            }
+            int pageCnt = 1;
+            int pageSize = 50;
+            int maxPageCnt = (txCnt / pageSize) + (txCnt % pageSize == 0 ? 0 : 1);
+            for (; pageCnt <= maxPageCnt; pageCnt++) {
+                JSONArray jsonArray = tokenViewService.getBlockTxList(blockNum + "", ChainType.BTC.toString().toLowerCase(), pageCnt, pageSize);
+                for (Object obj : jsonArray) {
+                    JSONObject jsonObject = (JSONObject) obj;
+                    logger.info("{}", jsonObject);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("{} - 监听BTC链异常了{}", uuid, e.getMessage(), e);
+        } finally {
+            chainMonitorInfoService.addBlockNum(ChainType.BTC.toString().toUpperCase());
+        }
+
+    }
+
+
+    public void runEthMonitor() {
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        logger.info("{} - 监听ETH链", uuid);
+        try {
+            ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.ETH.toString().toUpperCase());
+            long blockNum = chainMonitorInfo.getBlockNum();
+            Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.ETH.toString().toLowerCase());
+            logger.info("{} - ETH区块[{}]交易数{}", uuid, blockNum, txCnt);
+            if (txCnt == 0) {
+                return;
+            }
+            int pageCnt = 1;
+            int pageSize = 50;
+            int maxPageCnt = (txCnt / pageSize) + (txCnt % pageSize == 0 ? 0 : 1);
+            for (; pageCnt <= maxPageCnt; pageCnt++) {
+                JSONArray jsonArray = tokenViewService.getBlockTxList(blockNum + "", ChainType.ETH.toString().toLowerCase(), pageCnt, pageSize);
+                for (Object obj : jsonArray) {
+                    JSONObject jsonObject = (JSONObject) obj;
+                    logger.info("{}", jsonObject);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("{} - 监听ETH链异常了{}", uuid, e.getMessage(), e);
+        } finally {
+            chainMonitorInfoService.addBlockNum(ChainType.BTC.toString().toUpperCase());
+        }
 
     }
 }
