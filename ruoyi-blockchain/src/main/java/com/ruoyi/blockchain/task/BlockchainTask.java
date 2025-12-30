@@ -88,7 +88,12 @@ public class BlockchainTask {
                 // 转账数据：到账地址、交易金额
                 String data = Hex.toHexString(transferContract.getData().toByteArray());
                 // 函数选择器，必须为【a9059cbb】
-                String funcId = data.substring(0, 8);
+
+                String funcId = "";
+
+                try{
+                    funcId = data.substring(0, 8);
+                }catch (Exception ignored){}
                 if (!TronConstants.TRANSFER_FUNC_ID_BY_KECCAK256.equals(funcId)) {
                     logger.info("{} - 不是标准转账函数,不处理", uuid);
                     continue;
@@ -140,10 +145,11 @@ public class BlockchainTask {
                     logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
                 }
             }
+            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
         }finally {
-            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
+
             apiWrapper.close();
         }
 
