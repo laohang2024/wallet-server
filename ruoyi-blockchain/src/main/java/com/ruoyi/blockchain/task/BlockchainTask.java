@@ -140,12 +140,13 @@ public class BlockchainTask {
                     logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
                 }
             }
-            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
+        }finally {
+            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
+            apiWrapper.close();
         }
 
-        apiWrapper.close();
 
     }
 
