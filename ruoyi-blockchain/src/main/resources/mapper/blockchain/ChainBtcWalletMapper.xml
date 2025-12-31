@@ -69,4 +69,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
+
+    <select id="selectChainBtcWalletListByAddresses" parameterType="String" resultMap="ChainBtcWalletResult">
+        select * from chain_btc_wallet where address in
+        <foreach item="address" collection="array" open="(" separator="," close=")">
+            #{address}
+        </foreach>
+    </select>
 </mapper>

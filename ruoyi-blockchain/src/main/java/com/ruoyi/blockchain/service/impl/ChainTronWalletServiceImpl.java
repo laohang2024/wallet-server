@@ -1,7 +1,7 @@
 package com.ruoyi.blockchain.service.impl;
 
 import java.util.List;
-import com.ruoyi.common.utils.DateUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.blockchain.mapper.ChainTronWalletMapper;
@@ -100,8 +100,8 @@ public class ChainTronWalletServiceImpl implements IChainTronWalletService
      * @return 结果
      */
     @Override
-    public List<ChainTronWallet> selectChainTronWalletListByAddresss(String[] addresss)
+    public List<ChainTronWallet> selectChainTronWalletListByAddresses(String[] addresses)
     {
-        return chainTronWalletMapper.selectChainTronWalletListByAddresss(addresss);
+        return chainTronWalletMapper.selectChainTronWalletListByAddresses(addresses);
     }
 }

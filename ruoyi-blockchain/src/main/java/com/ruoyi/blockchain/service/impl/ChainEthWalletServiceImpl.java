@@ -1,7 +1,7 @@
 package com.ruoyi.blockchain.service.impl;
 
 import java.util.List;
-import com.ruoyi.common.utils.DateUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.blockchain.mapper.ChainEthWalletMapper;
@@ -78,7 +78,7 @@ public class ChainEthWalletServiceImpl implements IChainEthWalletService
     @Override
     public int deleteChainEthWalletByAddresss(String addresss)
     {
-        return chainEthWalletMapper.deleteChainEthWalletByAddresss(Convert.toStrArray(addresss));
+        return chainEthWalletMapper.deleteChainEthWalletByAddresses(Convert.toStrArray(addresss));
     }
 
     /**
@@ -92,4 +92,11 @@ public class ChainEthWalletServiceImpl implements IChainEthWalletService
     {
         return chainEthWalletMapper.deleteChainEthWalletByAddress(address);
     }
+
+    @Override
+    public List<ChainEthWallet> selectChainEthWalletListByAddresses(String[] addresses) {
+        return chainEthWalletMapper.selectChainEthWalletListByAddresses(addresses);
+    }
+
+
 }

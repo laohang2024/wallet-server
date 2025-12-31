@@ -2,6 +2,7 @@ package com.ruoyi.blockchain.mapper;
 
 import java.util.List;
 import com.ruoyi.blockchain.domain.ChainBtcWallet;
+import com.ruoyi.blockchain.domain.ChainEthWallet;
 
 /**
  * BTC钱包Mapper接口
@@ -54,8 +55,10 @@ public interface ChainBtcWalletMapper
     /**
      * 批量删除BTC钱包
      * 
-     * @param addresss 需要删除的数据主键集合
+     * @param addresses 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteChainBtcWalletByAddresss(String[] addresss);
+    public int deleteChainBtcWalletByAddresses(String[] addresses);
+
+    public List<ChainBtcWallet> selectChainBtcWalletListByAddresses(String[] addresses);
 }

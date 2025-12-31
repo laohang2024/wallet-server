@@ -47,7 +47,7 @@ public class TokenViewService {
         String url = tokenViewHost + "/vipapi/tx/" + chainType + "/" + blockNumber + "/" + pageNo + "/" + pageSize + "?apikey=" + apiKey;
         logger.info("{} - 向{}请求查询块交易列表", uuid, url);
         String requestStr = HttpUtil.get(url);
-        logger.info("{} - 查询块交易列表:{}", uuid, requestStr);
+        //logger.info("{} - 查询块交易列表:{}", uuid, requestStr);
         JSONArray data = new JSONArray();
         try {
             JSONObject jsonObject = JSONObject.parseObject(requestStr);

@@ -2,6 +2,7 @@ package com.ruoyi.blockchain.service;
 
 import java.util.List;
 import com.ruoyi.blockchain.domain.ChainEthWallet;
+import com.ruoyi.blockchain.domain.ChainTronWallet;
 
 /**
  * ETH钱包Service接口
@@ -58,4 +59,7 @@ public interface IChainEthWalletService
      * @return 结果
      */
     public int deleteChainEthWalletByAddress(String address);
+
+
+    public List<ChainEthWallet> selectChainEthWalletListByAddresses(String[] addresses);
 }

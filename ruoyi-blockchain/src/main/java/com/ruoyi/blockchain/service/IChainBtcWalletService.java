@@ -2,6 +2,7 @@ package com.ruoyi.blockchain.service;
 
 import java.util.List;
 import com.ruoyi.blockchain.domain.ChainBtcWallet;
+import com.ruoyi.blockchain.domain.ChainEthWallet;
 
 /**
  * BTC钱包Service接口
@@ -58,4 +59,8 @@ public interface IChainBtcWalletService
      * @return 结果
      */
     public int deleteChainBtcWalletByAddress(String address);
+
+
+    public List<ChainBtcWallet> selectChainBtcWalletListByAddresses(String[] addresses);
+
 }

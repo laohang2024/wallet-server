@@ -7,9 +7,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.ruoyi.blockchain.chain.core.ChainType;
 import com.ruoyi.blockchain.constant.TronConstants;
-import com.ruoyi.blockchain.domain.ChainMonitorInfo;
-import com.ruoyi.blockchain.domain.ChainTronWallet;
-import com.ruoyi.blockchain.domain.UsdtTrade;
+import com.ruoyi.blockchain.domain.*;
 import com.ruoyi.blockchain.service.*;
 import com.ruoyi.blockchain.util.BlockUtil;
 import com.ruoyi.blockchain.util.TransactionUtil;
@@ -43,7 +41,13 @@ public class BlockchainTask {
     private IUsdtTradeService usdtTradeService;
 
     @Resource
+    private IEthTradeService ethTradeService;
+
+    @Resource
     private IChainTronWalletService chainTronWalletService;
+
+    @Resource
+    private IChainEthWalletService chainEthWalletService;
 
     @Resource
     private IChainMonitorInfoService chainMonitorInfoService;
@@ -91,9 +95,10 @@ public class BlockchainTask {
 
                 String funcId = "";
 
-                try{
+                try {
                     funcId = data.substring(0, 8);
-                }catch (Exception ignored){}
+                } catch (Exception ignored) {
+                }
                 if (!TronConstants.TRANSFER_FUNC_ID_BY_KECCAK256.equals(funcId)) {
                     logger.info("{} - 不是标准转账函数,不处理", uuid);
                     continue;
@@ -134,7 +139,7 @@ public class BlockchainTask {
                 chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
                 return;
             }
-            List<ChainTronWallet> walletList = chainTronWalletService.selectChainTronWalletListByAddresss(toAddressList.toArray(new String[0]));
+            List<ChainTronWallet> walletList = chainTronWalletService.selectChainTronWalletListByAddresses(toAddressList.toArray(new String[0]));
             logger.info("{}", JSON.toJSONString(walletList));
 
             for (ChainTronWallet chainTronWallet : walletList) {
@@ -148,7 +153,7 @@ public class BlockchainTask {
             chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
-        }finally {
+        } finally {
 
             apiWrapper.close();
         }
@@ -205,15 +210,42 @@ public class BlockchainTask {
             int maxPageCnt = (txCnt / pageSize) + (txCnt % pageSize == 0 ? 0 : 1);
             for (; pageCnt <= maxPageCnt; pageCnt++) {
                 JSONArray jsonArray = tokenViewService.getBlockTxList(blockNum + "", ChainType.ETH.toString().toLowerCase(), pageCnt, pageSize);
+                List<String> toAddressList = new ArrayList<>();
+                Map<String,EthTrade> ethTradeMap = new HashMap<>();
                 for (Object obj : jsonArray) {
                     JSONObject jsonObject = (JSONObject) obj;
-                    logger.info("{}", jsonObject);
+                    toAddressList.add(jsonObject.getString("to"));
+                    EthTrade ethTrade = new EthTrade();
+                    ethTrade.setTxHash(jsonObject.getString("txid"));
+                    ethTrade.setAmount(jsonObject.getBigDecimal("value"));
+                    ethTrade.setBlockNum(jsonObject.getLong("block_no"));
+                    ethTrade.setTxTime(jsonObject.getLong("time") * 1000);
+                    ethTrade.setFromAddress(jsonObject.getString("from"));
+                    ethTrade.setToAddress(jsonObject.getString("to"));
+                    ethTradeMap.put(jsonObject.getString("to"),ethTrade);
+
+                }
+                if (toAddressList.isEmpty()) {
+                    logger.info("{} - 未找监听到ETH任何地址", uuid);
+                    chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
+                    return;
+                }
+                List<ChainEthWallet> walletList = chainEthWalletService.selectChainEthWalletListByAddresses(toAddressList.toArray(new String[0]));
+                logger.info("找到符合条件的ETH地址{}", JSON.toJSONString(walletList));
+
+                for (ChainEthWallet chainEthWallet : walletList) {
+                    EthTrade ethTrade = ethTradeMap.get(chainEthWallet.getAddress());
+                    try {
+                        ethTradeService.insertEthTrade(ethTrade);
+                    } catch (Exception e) {
+                        logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
+                    }
                 }
             }
         } catch (Exception e) {
             logger.error("{} - 监听ETH链异常了{}", uuid, e.getMessage(), e);
         } finally {
-            chainMonitorInfoService.addBlockNum(ChainType.BTC.toString().toUpperCase());
+            chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
         }
 
     }
