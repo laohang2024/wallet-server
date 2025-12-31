@@ -203,6 +203,7 @@ public class BlockchainTask {
             Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.ETH.toString().toLowerCase());
             logger.info("{} - ETH区块[{}]交易数{}", uuid, blockNum, txCnt);
             if (txCnt == 0) {
+                logger.info("{} - ETH区块查询失败,暂不处理", uuid);
                 return;
             }
             int pageCnt = 1;
@@ -227,8 +228,7 @@ public class BlockchainTask {
                 }
                 if (toAddressList.isEmpty()) {
                     logger.info("{} - 未找监听到ETH任何地址", uuid);
-                    chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
-                    return;
+                    continue;
                 }
                 List<ChainEthWallet> walletList = chainEthWalletService.selectChainEthWalletListByAddresses(toAddressList.toArray(new String[0]));
                 logger.info("找到符合条件的ETH地址{}", JSON.toJSONString(walletList));
@@ -242,10 +242,9 @@ public class BlockchainTask {
                     }
                 }
             }
+            chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听ETH链异常了{}", uuid, e.getMessage(), e);
-        } finally {
-            chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
         }
 
     }
