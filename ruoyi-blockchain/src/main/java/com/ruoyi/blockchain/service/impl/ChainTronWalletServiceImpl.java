@@ -93,12 +93,7 @@ public class ChainTronWalletServiceImpl implements IChainTronWalletService
         return chainTronWalletMapper.deleteChainTronWalletByAddress(address);
     }
 
-    /**
-     * 删除TRON钱包信息
-     *
-     * @param address TRON钱包主键
-     * @return 结果
-     */
+
     @Override
     public List<ChainTronWallet> selectChainTronWalletListByAddresses(String[] addresses)
     {
