@@ -140,7 +140,7 @@ public class BlockchainTask {
                 return;
             }
             List<ChainTronWallet> walletList = chainTronWalletService.selectChainTronWalletListByAddresses(toAddressList.toArray(new String[0]));
-            logger.info("{}", JSON.toJSONString(walletList));
+            logger.info("待处理钱包 - {}", JSON.toJSONString(walletList));
 
             for (ChainTronWallet chainTronWallet : walletList) {
                 UsdtTrade usdtTrade = usdtTradeMap.get(chainTronWallet.getAddress());

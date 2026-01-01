@@ -26,7 +26,7 @@ public class TokenViewService {
         String url = tokenViewHost + "/vipapi/block/" + chainType + "/" + blockNumber + "?apikey=" + apiKey;
         logger.info("{} - 向{}请求查询块信息", uuid, url);
         String requestStr = HttpUtil.get(url);
-        logger.info("{} - 查询块信息返回参数:{}", uuid, requestStr);
+        //logger.info("{} - 查询块信息返回参数:{}", uuid, requestStr);
         Integer blockTxCnt = 0;
         try {
             JSONObject jsonObject = JSONObject.parseObject(requestStr);
