@@ -66,7 +66,7 @@ public class NotifyTask {
                 param.put("mchNo", walletInfo.getMchNo());
                 param.put("userId", walletInfo.getUserId());
                 param.put("chainType", ChainType.ETH.toString().toUpperCase());
-                param.put("sendAddress", ethTrade.getToAddress());
+                param.put("sendAddress", ethTrade.getFromAddress());
                 param.put("receiveAddress", ethTrade.getToAddress());
                 param.put("hashCode", ethTrade.getTxHash());
                 param.put("timestamp", ethTrade.getTxTime());
@@ -115,7 +115,7 @@ public class NotifyTask {
                 param.put("mchNo", walletInfo.getMchNo());
                 param.put("userId", walletInfo.getUserId());
                 param.put("chainType", ChainType.TRON.toString().toUpperCase());
-                param.put("sendAddress", usdtTrade.getToAddress());
+                param.put("sendAddress", usdtTrade.getFromAddress());
                 param.put("receiveAddress", usdtTrade.getToAddress());
                 param.put("hashCode", usdtTrade.getTxHash());
                 param.put("timestamp", usdtTrade.getTxTime());
