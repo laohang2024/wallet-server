@@ -154,7 +154,6 @@ public class BlockchainTask {
         } catch (Exception e) {
             logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
         } finally {
-
             apiWrapper.close();
         }
 
