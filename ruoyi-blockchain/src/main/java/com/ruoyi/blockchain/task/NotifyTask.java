@@ -170,7 +170,7 @@ public class NotifyTask {
                 Map<String, Object> param = new HashMap<>();
                 param.put("mchNo", walletInfo.getMchNo());
                 param.put("userId", walletInfo.getUserId());
-                param.put("chainType", ChainType.ETH.toString().toUpperCase());
+                param.put("chainType", ChainType.BTC.toString().toUpperCase());
                 param.put("sendAddress", btcTrade.getFromAddress());
                 param.put("receiveAddress", btcTrade.getToAddress());
                 param.put("hashCode", btcTrade.getTxHash());
