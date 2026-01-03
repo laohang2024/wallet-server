@@ -3,9 +3,11 @@ package com.ruoyi.blockchain.task;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.http.HttpUtil;
 import com.ruoyi.blockchain.chain.core.ChainType;
+import com.ruoyi.blockchain.domain.BtcTrade;
 import com.ruoyi.blockchain.domain.EthTrade;
 import com.ruoyi.blockchain.domain.MchChainWalletInfo;
 import com.ruoyi.blockchain.domain.UsdtTrade;
+import com.ruoyi.blockchain.service.IBtcTradeService;
 import com.ruoyi.blockchain.service.IEthTradeService;
 import com.ruoyi.blockchain.service.IMchChainWalletInfoService;
 import com.ruoyi.blockchain.service.IUsdtTradeService;
@@ -33,6 +35,9 @@ public class NotifyTask {
     @Resource
     private IEthTradeService ethTradeService;
 
+    @Resource
+    private IBtcTradeService btcTradeService;
+
     String url = "https://api.okxetoken.com/api/notify/notify";
 
 
@@ -41,6 +46,7 @@ public class NotifyTask {
         try {
             notifyUsdtNotify();
             notifyEthNotify();
+            notifyBtcNotify();
         } catch (Exception e) {
             logger.error("监听待回调异常了{}", e.getMessage(), e);
         }
@@ -138,6 +144,56 @@ public class NotifyTask {
                 usdtTrade.setNotifyCnt(notifyCnt + 1);
                 usdtTradeService.updateUsdtTrade(usdtTrade);
                 logger.info("USDT回调返回:{}", request);
+            } catch (Exception e) {
+                logger.error("回调失败", e);
+            }
+        }
+    }
+
+
+    private void notifyBtcNotify() {
+        BtcTrade query = new BtcTrade();
+        byte isNotify = 0;
+        query.setIsNotify(isNotify);
+        List<BtcTrade> list = btcTradeService.selectBtcTradeList(query);
+        for(BtcTrade btcTrade : list) {
+            try {
+                MchChainWalletInfo walletInfo = mchChainWalletInfoService.selectMchChainWalletInfoByAddress(btcTrade.getToAddress(), ChainType.BTC.toString().toUpperCase());
+                if (walletInfo == null) {
+                    logger.info("未找到商户Btc钱包信息,暂不处理");
+                    byte notifyFlag = 2;
+                    btcTrade.setIsNotify(notifyFlag);
+                    btcTradeService.updateBtcTrade(btcTrade);
+                    continue;
+                }
+
+                Map<String, Object> param = new HashMap<>();
+                param.put("mchNo", walletInfo.getMchNo());
+                param.put("userId", walletInfo.getUserId());
+                param.put("chainType", ChainType.ETH.toString().toUpperCase());
+                param.put("sendAddress", btcTrade.getFromAddress());
+                param.put("receiveAddress", btcTrade.getToAddress());
+                param.put("hashCode", btcTrade.getTxHash());
+                param.put("timestamp", btcTrade.getTxTime());
+                param.put("amount", btcTrade.getAmount().setScale(6, RoundingMode.HALF_UP));
+
+                String signStr =
+                        param.get("mchNo") + "|" + param.get("userId") +
+                                "|" + param.get("chainType") + "|" + param.get("sendAddress") + "|" + param.get("receiveAddress") +
+                                "|" + param.get("hashCode") + "|" + param.get("timestamp") + "|" + param.get("amount") + "|973174ded83451641b3252695f5191bb";
+                param.put("sign", DigestUtil.md5Hex(signStr));
+                String request = HttpUtil.post(url, param);
+                Integer notifyCnt = btcTrade.getNotifyCnt();
+                if("success".equalsIgnoreCase(request)) {
+                    byte notifyFlag = 1;
+                    btcTrade.setIsNotify(notifyFlag);
+                }else if (!"success".equalsIgnoreCase(request) && notifyCnt >= 6){
+                    byte notifyFlag = 2;
+                    btcTrade.setIsNotify(notifyFlag);
+                }
+                btcTrade.setNotifyCnt(notifyCnt + 1);
+                btcTradeService.updateBtcTrade(btcTrade);
+                logger.info("BTC回调返回:{}", request);
             } catch (Exception e) {
                 logger.error("回调失败", e);
             }
