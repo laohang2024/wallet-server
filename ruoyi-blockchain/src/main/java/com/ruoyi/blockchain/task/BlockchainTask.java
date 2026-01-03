@@ -44,13 +44,20 @@ public class BlockchainTask {
     private IEthTradeService ethTradeService;
 
     @Resource
+    private IBtcTradeService btcTradeService;
+
+    @Resource
     private IChainTronWalletService chainTronWalletService;
 
     @Resource
     private IChainEthWalletService chainEthWalletService;
 
     @Resource
+    private IChainBtcWalletService chainBtcWalletService;
+
+    @Resource
     private IChainMonitorInfoService chainMonitorInfoService;
+
 
     public void runTronMonitor() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
@@ -172,18 +179,58 @@ public class BlockchainTask {
             Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.BTC.toString().toLowerCase());
             logger.info("{} - BTC区块[{}]交易数{}", uuid, blockNum, txCnt);
             if (txCnt == 0) {
+                logger.info("{} - BTC区块查询失败,暂不处理", uuid);
                 return;
             }
             int pageCnt = 1;
             int pageSize = 50;
             int maxPageCnt = (txCnt / pageSize) + (txCnt % pageSize == 0 ? 0 : 1);
+            logger.info("共{}页", maxPageCnt);
+            List<String> toAddressList = new ArrayList<>();
+            Map<String, BtcTrade> btcTradeMap = new HashMap<>();
             for (; pageCnt <= maxPageCnt; pageCnt++) {
                 JSONArray jsonArray = tokenViewService.getBlockTxList(blockNum + "", ChainType.BTC.toString().toLowerCase(), pageCnt, pageSize);
+
                 for (Object obj : jsonArray) {
                     JSONObject jsonObject = (JSONObject) obj;
-                    logger.info("{}", jsonObject);
+                    JSONArray inputs = jsonObject.getJSONArray("inputs");
+                    JSONObject inputInfo = inputs.getJSONObject(0);
+                    String fromAddress = inputInfo.getString("address");
+
+                    JSONArray outputs = jsonObject.getJSONArray("outputs");
+                    for(int i = 0 ; i < outputs.size();i++){
+                        JSONObject jObject = outputs.getJSONObject(i);
+                        String toAddress = jObject.getString("address");
+                        toAddressList.add(toAddress);
+
+                        BtcTrade btcTrade = new BtcTrade();
+                        btcTrade.setTxHash(jsonObject.getString("txid"));
+                        btcTrade.setAmount(jObject.getBigDecimal("value"));
+                        btcTrade.setBlockNum(jsonObject.getLong("block_no"));
+                        btcTrade.setTxTime(jsonObject.getLong("time") * 1000);
+                        btcTrade.setFromAddress(fromAddress);
+                        btcTrade.setToAddress(toAddress);
+                        btcTradeMap.put(toAddress, btcTrade);
+                    }
+                }
+
+                if (toAddressList.isEmpty()) {
+                    logger.info("{} - 未找监听到BTC任何地址", uuid);
+                    continue;
+                }
+
+                List<ChainBtcWallet> walletList = chainBtcWalletService.selectChainBtcWalletListByAddresses(toAddressList.toArray(new String[0]));
+                logger.info("找到符合条件的BTC地址{}", JSON.toJSONString(walletList));
+                for (ChainBtcWallet chainEthWallet : walletList) {
+                    BtcTrade btcTrade = btcTradeMap.get(chainEthWallet.getAddress());
+                    try {
+                        btcTradeService.insertBtcTrade(btcTrade);
+                    } catch (Exception e) {
+                        logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
+                    }
                 }
             }
+
         } catch (Exception e) {
             logger.error("{} - 监听BTC链异常了{}", uuid, e.getMessage(), e);
         } finally {
@@ -211,7 +258,7 @@ public class BlockchainTask {
             for (; pageCnt <= maxPageCnt; pageCnt++) {
                 JSONArray jsonArray = tokenViewService.getBlockTxList(blockNum + "", ChainType.ETH.toString().toLowerCase(), pageCnt, pageSize);
                 List<String> toAddressList = new ArrayList<>();
-                Map<String,EthTrade> ethTradeMap = new HashMap<>();
+                Map<String, EthTrade> ethTradeMap = new HashMap<>();
                 for (Object obj : jsonArray) {
                     JSONObject jsonObject = (JSONObject) obj;
                     toAddressList.add(jsonObject.getString("to"));
@@ -222,7 +269,7 @@ public class BlockchainTask {
                     ethTrade.setTxTime(jsonObject.getLong("time") * 1000);
                     ethTrade.setFromAddress(jsonObject.getString("from"));
                     ethTrade.setToAddress(jsonObject.getString("to"));
-                    ethTradeMap.put(jsonObject.getString("to"),ethTrade);
+                    ethTradeMap.put(jsonObject.getString("to"), ethTrade);
 
                 }
                 if (toAddressList.isEmpty()) {
@@ -231,7 +278,7 @@ public class BlockchainTask {
                 }
                 List<ChainEthWallet> walletList = chainEthWalletService.selectChainEthWalletListByAddresses(toAddressList.toArray(new String[0]));
                 logger.info("找到符合条件的ETH地址{}", JSON.toJSONString(walletList));
-
+                logger.info("共{}页", maxPageCnt);
                 for (ChainEthWallet chainEthWallet : walletList) {
                     EthTrade ethTrade = ethTradeMap.get(chainEthWallet.getAddress());
                     try {

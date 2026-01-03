@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.blockchain.mapper.BtcTradeMapper">
+    
+    <resultMap type="BtcTrade" id="BtcTradeResult">
+        <result property="txHash"    column="tx_hash"    />
+        <result property="fromAddress"    column="from_address"    />
+        <result property="toAddress"    column="to_address"    />
+        <result property="amount"    column="amount"    />
+        <result property="txTime"    column="tx_time"    />
+        <result property="blockNum"    column="block_num"    />
+        <result property="isNotify"    column="is_notify"    />
+        <result property="notifyCnt"    column="notify_cnt"    />
+    </resultMap>
+
+    <sql id="selectBtcTradeVo">
+        select tx_hash, from_address, to_address, amount, tx_time, block_num, is_notify, notify_cnt from btc_trade
+    </sql>
+
+    <select id="selectBtcTradeList" parameterType="BtcTrade" resultMap="BtcTradeResult">
+        <include refid="selectBtcTradeVo"/>
+        <where>  
+            <if test="fromAddress != null  and fromAddress != ''"> and from_address = #{fromAddress}</if>
+            <if test="toAddress != null  and toAddress != ''"> and to_address = #{toAddress}</if>
+            <if test="amount != null "> and amount = #{amount}</if>
+            <if test="txTime != null "> and tx_time = #{txTime}</if>
+            <if test="blockNum != null "> and block_num = #{blockNum}</if>
+            <if test="isNotify != null "> and is_notify = #{isNotify}</if>
+            <if test="notifyCnt != null "> and notify_cnt = #{notifyCnt}</if>
+        </where>
+    </select>
+    
+    <select id="selectBtcTradeByTxHash" parameterType="String" resultMap="BtcTradeResult">
+        <include refid="selectBtcTradeVo"/>
+        where tx_hash = #{txHash}
+    </select>
+
+    <insert id="insertBtcTrade" parameterType="BtcTrade">
+        insert into btc_trade
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="txHash != null">tx_hash,</if>
+            <if test="fromAddress != null and fromAddress != ''">from_address,</if>
+            <if test="toAddress != null and toAddress != ''">to_address,</if>
+            <if test="amount != null">amount,</if>
+            <if test="txTime != null">tx_time,</if>
+            <if test="blockNum != null">block_num,</if>
+            <if test="isNotify != null">is_notify,</if>
+            <if test="notifyCnt != null">notify_cnt,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="txHash != null">#{txHash},</if>
+            <if test="fromAddress != null and fromAddress != ''">#{fromAddress},</if>
+            <if test="toAddress != null and toAddress != ''">#{toAddress},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="txTime != null">#{txTime},</if>
+            <if test="blockNum != null">#{blockNum},</if>
+            <if test="isNotify != null">#{isNotify},</if>
+            <if test="notifyCnt != null">#{notifyCnt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBtcTrade" parameterType="BtcTrade">
+        update btc_trade
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="fromAddress != null and fromAddress != ''">from_address = #{fromAddress},</if>
+            <if test="toAddress != null and toAddress != ''">to_address = #{toAddress},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="txTime != null">tx_time = #{txTime},</if>
+            <if test="blockNum != null">block_num = #{blockNum},</if>
+            <if test="isNotify != null">is_notify = #{isNotify},</if>
+            <if test="notifyCnt != null">notify_cnt = #{notifyCnt},</if>
+        </trim>
+        where tx_hash = #{txHash}
+    </update>
+
+    <delete id="deleteBtcTradeByTxHash" parameterType="String">
+        delete from btc_trade where tx_hash = #{txHash}
+    </delete>
+
+    <delete id="deleteBtcTradeByTxHashs" parameterType="String">
+        delete from btc_trade where tx_hash in 
+        <foreach item="txHash" collection="array" open="(" separator="," close=")">
+            #{txHash}
+        </foreach>
+    </delete>
+
+</mapper>
