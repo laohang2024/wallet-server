@@ -63,16 +63,20 @@ public class BlockchainTask {
     public void runTronMonitor() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         logger.info("{} -开始监听TRON链", uuid);
-        Map<String, Long> blockMap = getLastNumber(uuid);
+        Map<String, Long> blockMap = getUsdtLastBlockNumber(uuid);
         Long startBlockNum = blockMap.get("startBlockNum");
         Long endBlockNum = blockMap.get("endBlockNum");
+        if (startBlockNum <= 0) {
+            logger.info("{} - 未找TRON到块高", uuid);
+            return;
+        }
         for (long blockNum = startBlockNum; blockNum <= endBlockNum; blockNum++) {
             runTron(blockNum, uuid);
         }
     }
 
 
-    public Map<String, Long> getLastNumber(String uuid) {
+    public Map<String, Long> getUsdtLastBlockNumber(String uuid) {
         ApiWrapper apiWrapper = apiWrapperService.create();
         Map<String, Long> resultMap = new HashMap<>();
         resultMap.put("startBlockNum", 0L);
@@ -80,7 +84,6 @@ public class BlockchainTask {
         try {
             ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.TRON.toString().toUpperCase());
             Long startBlockNum = chainMonitorInfo.getBlockNum();
-            startBlockNum += 1;
             Chain.Block block = apiWrapper.getNowBlock();
             long lastBlockNum = block.getBlockHeader().getRawData().getNumber();
             if (lastBlockNum <= startBlockNum) {
@@ -88,9 +91,10 @@ public class BlockchainTask {
                 return resultMap;
             }
 
-            if (lastBlockNum - startBlockNum > 5) {
+            if (lastBlockNum - startBlockNum > 6) {
                 lastBlockNum = startBlockNum + 5;
             }
+            startBlockNum += 1;
             logger.info("{} - 需要处理的块 {}", uuid, JSON.toJSONString(resultMap));
             resultMap.put("startBlockNum", startBlockNum);
             resultMap.put("endBlockNum", lastBlockNum);
@@ -216,10 +220,56 @@ public class BlockchainTask {
 
     public void runBtcMonitor() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        logger.info("{} - 监听BTC链", uuid);
+        logger.info("{} -开始监听BTC链", uuid);
+        Map<String, Long> blockMap = getBtcLastBlockNumber(uuid);
+        Long startBlockNum = blockMap.get("startBlockNum");
+        Long endBlockNum = blockMap.get("endBlockNum");
+        if (startBlockNum <= 0) {
+            logger.info("{} - 未找BTC块高", uuid);
+            return;
+        }
+        for (long blockNum = startBlockNum; blockNum <= endBlockNum; blockNum++) {
+            runBtc(blockNum, uuid);
+        }
+    }
+
+    public Map<String, Long> getBtcLastBlockNumber(String uuid) {
+        Map<String, Long> resultMap = new HashMap<>();
+        resultMap.put("startBlockNum", 0L);
+        resultMap.put("endBlockNum", 0L);
         try {
             ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.BTC.toString().toUpperCase());
-            long blockNum = chainMonitorInfo.getBlockNum();
+            Long startBlockNum = chainMonitorInfo.getBlockNum();
+
+            Long lastBlockNum = tokenViewService.getLastBlockNum(ChainType.BTC.toString().toLowerCase());
+            if (lastBlockNum <= 0) {
+                logger.info("{} - BTC查询最新块高失败 {}", uuid, JSON.toJSONString(resultMap));
+                return resultMap;
+            }
+            lastBlockNum -= 1;
+            if (lastBlockNum <= startBlockNum) {
+                logger.info("{} - BTC未有新块 {}", uuid, JSON.toJSONString(resultMap));
+                return resultMap;
+            }
+            if (lastBlockNum - startBlockNum > 2) {
+                lastBlockNum = startBlockNum + 1;
+            }
+            startBlockNum += 1;
+            logger.info("{} - BTC需要处理的块 {}", uuid, JSON.toJSONString(resultMap));
+            resultMap.put("startBlockNum", startBlockNum);
+            resultMap.put("endBlockNum", lastBlockNum);
+            chainMonitorInfo.setLastTime(System.currentTimeMillis());
+            chainMonitorInfo.setBlockNum(lastBlockNum);
+            chainMonitorInfoService.updateChainMonitorInfo(chainMonitorInfo);
+            return resultMap;
+        } catch (Exception e) {
+            logger.error("{} - 获取ETH最新块信息失败{}", uuid, e.getMessage(), e);
+            return resultMap;
+        }
+    }
+
+    public void runBtc(Long blockNum, String uuid) {
+        try {
             Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.BTC.toString().toLowerCase());
             logger.info("{} - BTC区块[{}]交易数{}", uuid, blockNum, txCnt);
             if (txCnt == 0) {
@@ -277,19 +327,62 @@ public class BlockchainTask {
 
         } catch (Exception e) {
             logger.error("{} - 监听BTC链异常了{}", uuid, e.getMessage(), e);
-        } finally {
-            chainMonitorInfoService.addBlockNum(ChainType.BTC.toString().toUpperCase());
         }
-
     }
 
 
     public void runEthMonitor() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        logger.info("{} - 监听ETH链", uuid);
+        logger.info("{} -开始监听ETH链", uuid);
+        Map<String, Long> blockMap = getEthLastBlockNumber(uuid);
+        Long startBlockNum = blockMap.get("startBlockNum");
+        Long endBlockNum = blockMap.get("endBlockNum");
+        if (startBlockNum <= 0) {
+            logger.info("{} - 未找ETH到块高", uuid);
+            return;
+        }
+        for (long blockNum = startBlockNum; blockNum <= endBlockNum; blockNum++) {
+            runEth(blockNum, uuid);
+        }
+    }
+
+    public Map<String, Long> getEthLastBlockNumber(String uuid) {
+        Map<String, Long> resultMap = new HashMap<>();
+        resultMap.put("startBlockNum", 0L);
+        resultMap.put("endBlockNum", 0L);
         try {
             ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.ETH.toString().toUpperCase());
-            long blockNum = chainMonitorInfo.getBlockNum();
+            Long startBlockNum = chainMonitorInfo.getBlockNum();
+
+
+            Long lastBlockNum = tokenViewService.getLastBlockNum(ChainType.ETH.toString().toLowerCase());
+            if (lastBlockNum <= 0) {
+                logger.info("{} - ETH查询最新块高失败 {}", uuid, JSON.toJSONString(resultMap));
+                return resultMap;
+            }
+            if (lastBlockNum <= startBlockNum) {
+                logger.info("{} - ETH未有新块 {}", uuid, JSON.toJSONString(resultMap));
+                return resultMap;
+            }
+            if (lastBlockNum - startBlockNum > 6) {
+                lastBlockNum = startBlockNum + 5;
+            }
+            startBlockNum += 1;
+            logger.info("{} - ETH需要处理的块 {}", uuid, JSON.toJSONString(resultMap));
+            resultMap.put("startBlockNum", startBlockNum);
+            resultMap.put("endBlockNum", lastBlockNum);
+            chainMonitorInfo.setLastTime(System.currentTimeMillis());
+            chainMonitorInfo.setBlockNum(lastBlockNum);
+            chainMonitorInfoService.updateChainMonitorInfo(chainMonitorInfo);
+            return resultMap;
+        } catch (Exception e) {
+            logger.error("{} - 获取ETH最新块信息失败{}", uuid, e.getMessage(), e);
+            return resultMap;
+        }
+    }
+
+    public void runEth(Long blockNum, String uuid) {
+        try {
             Integer txCnt = tokenViewService.getBlockTxCnt(blockNum + "", ChainType.ETH.toString().toLowerCase());
             logger.info("{} - ETH区块[{}]交易数{}", uuid, blockNum, txCnt);
             if (txCnt == 0) {
@@ -305,16 +398,16 @@ public class BlockchainTask {
                 Map<String, EthTrade> ethTradeMap = new HashMap<>();
                 for (Object obj : jsonArray) {
                     JSONObject jsonObject = (JSONObject) obj;
-                    toAddressList.add(jsonObject.getString("to"));
+                    String toAddress = jsonObject.getString("to");
+                    toAddressList.add(toAddress);
                     EthTrade ethTrade = new EthTrade();
                     ethTrade.setTxHash(jsonObject.getString("txid"));
                     ethTrade.setAmount(jsonObject.getBigDecimal("value"));
                     ethTrade.setBlockNum(jsonObject.getLong("block_no"));
                     ethTrade.setTxTime(jsonObject.getLong("time") * 1000);
                     ethTrade.setFromAddress(jsonObject.getString("from"));
-                    ethTrade.setToAddress(jsonObject.getString("to"));
-                    ethTradeMap.put(jsonObject.getString("to"), ethTrade);
-
+                    ethTrade.setToAddress(toAddress);
+                    ethTradeMap.put(toAddress, ethTrade);
                 }
                 if (toAddressList.isEmpty()) {
                     logger.info("{} - 未找监听到ETH任何地址", uuid);
@@ -324,18 +417,18 @@ public class BlockchainTask {
                 logger.info("找到符合条件的ETH地址{}", JSON.toJSONString(walletList));
                 logger.info("共{}页", maxPageCnt);
                 for (ChainEthWallet chainEthWallet : walletList) {
+
                     EthTrade ethTrade = ethTradeMap.get(chainEthWallet.getAddress());
                     try {
+
                         ethTradeService.insertEthTrade(ethTrade);
                     } catch (Exception e) {
                         logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
                     }
                 }
             }
-            chainMonitorInfoService.addBlockNum(ChainType.ETH.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听ETH链异常了{}", uuid, e.getMessage(), e);
         }
-
     }
 }

@@ -61,4 +61,25 @@ public class TokenViewService {
         }
         return data;
     }
+
+    public Long getLastBlockNum(String chainType) {
+        String uuid = UUID.randomUUID().toString();
+        String url = tokenViewHost + "/vipapi/coin/latest/" + chainType + "?apikey=" + apiKey;
+        logger.info("{} - 向{}请求查询最新块高", uuid, url);
+        try {
+            String requestStr = HttpUtil.get(url);
+            logger.info("{} - 查询最新块高:{}", uuid, requestStr);
+            JSONObject jsonObject = JSONObject.parseObject(requestStr);
+            String code = jsonObject.getString("code");
+            if (!code.equals("1")) {
+                logger.error("{} - 查询最新块高失败", uuid);
+                return 0L;
+            }
+            return jsonObject.getLong("data");
+        } catch (Exception e) {
+            logger.error("{} 查询最新块高失败 ", uuid, e);
+            return 0L;
+        }
+
+    }
 }
