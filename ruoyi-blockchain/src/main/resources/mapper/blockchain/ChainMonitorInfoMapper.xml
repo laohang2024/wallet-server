@@ -30,10 +30,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="chainType != null">chain_type,</if>
             <if test="blockNum != null">block_num,</if>
+            <if test="lastTime != null">last_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="chainType != null">#{chainType},</if>
             <if test="blockNum != null">#{blockNum},</if>
+            <if test="lastTime != null">#{lastTime},</if>
          </trim>
     </insert>
 
@@ -41,6 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update chain_monitor_info
         <trim prefix="SET" suffixOverrides=",">
             <if test="blockNum != null">block_num = #{blockNum},</if>
+            <if test="lastTime != null">last_time = #{lastTime},</if>
         </trim>
         where chain_type = #{chainType}
     </update>

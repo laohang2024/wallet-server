@@ -20,6 +20,7 @@ import org.tron.trident.abi.datatypes.Address;
 import org.tron.trident.abi.datatypes.NumericType;
 import org.tron.trident.abi.datatypes.generated.Uint256;
 import org.tron.trident.core.ApiWrapper;
+import org.tron.trident.core.exceptions.IllegalException;
 import org.tron.trident.proto.Chain;
 import org.tron.trident.proto.Contract;
 import org.tron.trident.proto.Response;
@@ -61,83 +62,63 @@ public class BlockchainTask {
 
     public void runTronMonitor() {
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        logger.info("{} -监听TRON链", uuid);
+        logger.info("{} -开始监听TRON链", uuid);
+        Map<String, Long> blockMap = getLastNumber(uuid);
+        Long startBlockNum = blockMap.get("startBlockNum");
+        Long endBlockNum = blockMap.get("endBlockNum");
+        for (long blockNum = startBlockNum; blockNum <= endBlockNum; blockNum++) {
+            runTron(blockNum, uuid);
+        }
+    }
+
+
+    public Map<String, Long> getLastNumber(String uuid) {
         ApiWrapper apiWrapper = apiWrapperService.create();
+        Map<String, Long> resultMap = new HashMap<>();
+        resultMap.put("startBlockNum", 0L);
+        resultMap.put("endBlockNum", 0L);
         try {
             ChainMonitorInfo chainMonitorInfo = chainMonitorInfoService.selectChainMonitorInfoByChainType(ChainType.TRON.toString().toUpperCase());
-            long blockNum = chainMonitorInfo.getBlockNum();
+            Long startBlockNum = chainMonitorInfo.getBlockNum();
+            startBlockNum += 1;
+            Chain.Block block = apiWrapper.getNowBlock();
+            long lastBlockNum = block.getBlockHeader().getRawData().getNumber();
+            if (lastBlockNum <= startBlockNum) {
+                logger.info("{} -未有最新的块，暂不处理", uuid);
+                return resultMap;
+            }
 
+            if (lastBlockNum - startBlockNum > 5) {
+                lastBlockNum = startBlockNum + 5;
+            }
+            logger.info("{} - 需要处理的块 {}", uuid, JSON.toJSONString(resultMap));
+            resultMap.put("startBlockNum", startBlockNum);
+            resultMap.put("endBlockNum", lastBlockNum);
+            chainMonitorInfo.setLastTime(System.currentTimeMillis());
+            chainMonitorInfo.setBlockNum(lastBlockNum);
+            chainMonitorInfoService.updateChainMonitorInfo(chainMonitorInfo);
+            return resultMap;
+        } catch (Exception e) {
+            logger.error("{} - 获取最新块信息失败{}", uuid, e.getMessage(), e);
+            return resultMap;
+        } finally {
+            apiWrapper.close();
+        }
+    }
+
+    public void runTron(long blockNum, String uuid) {
+        logger.info("{} -开始处理块-{}", uuid, blockNum);
+        ApiWrapper apiWrapper = apiWrapperService.create();
+        try {
             Response.BlockExtention blockExtention = apiWrapper.getBlockByNum(blockNum);
             String blockId = BlockUtil.parseBlockId(blockExtention);
             logger.info("{} - 区块高度：{} , 区块ID：{}", uuid, blockNum, blockId);
             Map<String, UsdtTrade> usdtTradeMap = new HashMap<>();
             for (Response.TransactionExtention transactionExtention : blockExtention.getTransactionsList()) {
-                Chain.Transaction transaction = transactionExtention.getTransaction();
-                // 检查交易是否成功
-                boolean status = TransactionUtil.isTransactionSuccess(transaction);
-                // 交易ID
-                String tid = TransactionUtil.getTransactionId(transaction);
-
-                if (!status) {
-                    logger.info("{} - 交易不成功,不处理 {}", uuid, tid);
-                    continue;
+                UsdtTrade usdtTrade = runTrad(transactionExtention, blockNum, uuid);
+                if (usdtTrade != null) {
+                    usdtTradeMap.put(usdtTrade.getToAddress(), usdtTrade);
                 }
-                Chain.Transaction.Contract.ContractType contractType = transaction.getRawData().getContract(0).getType();
-                if (contractType != Chain.Transaction.Contract.ContractType.TriggerSmartContract) {
-                    //logger.info("不是USDT交易,不处理 {}", tid);
-                    continue;
-                }
-                logger.info("{} - USDT交易,进行处理 {}", uuid, tid);
-                // 合约
-                Chain.Transaction.Contract contract = transaction.getRawData().getContract(0);
-                // parameter
-                Any any = contract.getParameter();
-                Contract.TriggerSmartContract transferContract = any.unpack(Contract.TriggerSmartContract.class);
-
-                // 备注
-                ByteString memoData = transaction.getRawData().getData();
-                // 转账数据：到账地址、交易金额
-                String data = Hex.toHexString(transferContract.getData().toByteArray());
-                // 函数选择器，必须为【a9059cbb】
-
-                String funcId = "";
-
-                try {
-                    funcId = data.substring(0, 8);
-                } catch (Exception ignored) {
-                }
-                if (!TronConstants.TRANSFER_FUNC_ID_BY_KECCAK256.equals(funcId)) {
-                    logger.info("{} - 不是标准转账函数,不处理", uuid);
-                    continue;
-                    //throw new Exception(funcId + "不是标准转账函数！");
-                }
-                // 收款人地址
-                String toAddressStr = data.substring(8, 72);
-                Address address = TypeDecoder.decodeAddress(toAddressStr);
-                String toAddress = address.getValue();
-                // 发送金额
-                String amountStr = data.substring(72, 136);
-                NumericType numericType = TypeDecoder.decodeNumeric(amountStr, Uint256.class);
-                BigDecimal amount = new BigDecimal(numericType.getValue()).divide(new BigDecimal("1000000"), 6, RoundingMode.HALF_UP);
-                // 发送人地址
-                byte[] fromAddressBs = transferContract.getOwnerAddress().toByteArray();
-                String fromAddress = Base58Check.bytesToBase58(fromAddressBs);
-                // 合约地址
-                byte[] contractAddressBs = transferContract.getContractAddress().toByteArray();
-                String contractAddress = Base58Check.bytesToBase58(contractAddressBs);
-                //交易时间
-                long timestamp = transaction.getRawData().getTimestamp();
-
-                UsdtTrade usdtTrade = new UsdtTrade();
-                usdtTrade.setContractAddress(contractAddress);
-                usdtTrade.setTxHash(tid);
-                usdtTrade.setFromAddress(fromAddress);
-                usdtTrade.setToAddress(toAddress);
-                usdtTrade.setBlockNum(blockNum);
-                usdtTrade.setAmount(amount);
-                usdtTrade.setTxTime(timestamp);
-                usdtTradeMap.put(toAddress, usdtTrade);
-                //logger.info("交易信息:{}", JSON.toJSONString(usdtTradeMap));
             }
 
             List<String> toAddressList = new ArrayList<>(usdtTradeMap.keySet());
@@ -157,15 +138,78 @@ public class BlockchainTask {
                     logger.error("{} - 插入数据失败,{}", uuid, e.getMessage(), e);
                 }
             }
-            chainMonitorInfoService.addBlockNum(ChainType.TRON.toString().toUpperCase());
         } catch (Exception e) {
             logger.error("{} - 监听TRON链异常了{}", uuid, e.getMessage(), e);
         } finally {
             apiWrapper.close();
         }
-
-
     }
+
+    public UsdtTrade runTrad(Response.TransactionExtention transactionExtention, Long blockNum, String uuid) {
+        try {
+            Chain.Transaction transaction = transactionExtention.getTransaction();
+            // 检查交易是否成功
+            boolean status = TransactionUtil.isTransactionSuccess(transaction);
+            // 交易ID
+            String tid = TransactionUtil.getTransactionId(transaction);
+            if (!status) {
+                //logger.info("{} - 交易不成功,不处理 {}", uuid, tid);
+                return null;
+            }
+            Chain.Transaction.Contract.ContractType contractType = transaction.getRawData().getContract(0).getType();
+            if (contractType != Chain.Transaction.Contract.ContractType.TriggerSmartContract) {
+                //logger.info("不是USDT交易,不处理 {}", tid);
+                return null;
+            }
+            // 合约
+            Chain.Transaction.Contract contract = transaction.getRawData().getContract(0);
+            // parameter
+            Any any = contract.getParameter();
+            Contract.TriggerSmartContract transferContract = any.unpack(Contract.TriggerSmartContract.class);
+
+            // 备注
+            ByteString memoData = transaction.getRawData().getData();
+            // 转账数据：到账地址、交易金额
+            String data = Hex.toHexString(transferContract.getData().toByteArray());
+            // 函数选择器，必须为【a9059cbb】
+
+            String funcId = data.substring(0, 8);
+
+            if (!TronConstants.TRANSFER_FUNC_ID_BY_KECCAK256.equals(funcId)) {
+                //logger.info("{} - 不是标准转账函数,不处理", uuid);
+                return null;
+            }
+            // 收款人地址
+            String toAddressStr = data.substring(8, 72);
+            Address address = TypeDecoder.decodeAddress(toAddressStr);
+            String toAddress = address.getValue();
+            // 发送金额
+            String amountStr = data.substring(72, 136);
+            NumericType numericType = TypeDecoder.decodeNumeric(amountStr, Uint256.class);
+            BigDecimal amount = new BigDecimal(numericType.getValue()).divide(new BigDecimal("1000000"), 6, RoundingMode.HALF_UP);
+            // 发送人地址
+            byte[] fromAddressBs = transferContract.getOwnerAddress().toByteArray();
+            String fromAddress = Base58Check.bytesToBase58(fromAddressBs);
+            // 合约地址
+            byte[] contractAddressBs = transferContract.getContractAddress().toByteArray();
+            String contractAddress = Base58Check.bytesToBase58(contractAddressBs);
+            //交易时间
+            long timestamp = transaction.getRawData().getTimestamp();
+            UsdtTrade usdtTrade = new UsdtTrade();
+            usdtTrade.setContractAddress(contractAddress);
+            usdtTrade.setTxHash(tid);
+            usdtTrade.setFromAddress(fromAddress);
+            usdtTrade.setToAddress(toAddress);
+            usdtTrade.setBlockNum(blockNum);
+            usdtTrade.setAmount(amount);
+            usdtTrade.setTxTime(timestamp);
+            return usdtTrade;
+        } catch (Exception e) {
+            logger.info("{} - 处理交易失败", uuid);
+            return null;
+        }
+    }
+
 
     @Resource
     TokenViewService tokenViewService;
@@ -198,7 +242,7 @@ public class BlockchainTask {
                     String fromAddress = inputInfo.getString("address");
 
                     JSONArray outputs = jsonObject.getJSONArray("outputs");
-                    for(int i = 0 ; i < outputs.size();i++){
+                    for (int i = 0; i < outputs.size(); i++) {
                         JSONObject jObject = outputs.getJSONObject(i);
                         String toAddress = jObject.getString("address");
                         toAddressList.add(toAddress);
