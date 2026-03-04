@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('USDT交易记录列表')" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>交易哈希：</label>
+                                <input type="text" name="txHash"/>
+                            </li>
+                            <li>
+                                <label>发送者地址：</label>
+                                <input type="text" name="fromAddress"/>
+                            </li>
+                            <li>
+                                <label>接收者地址：</label>
+                                <input type="text" name="toAddress"/>
+                            </li>
+                            <li>
+                                <label>交易金额：</label>
+                                <input type="text" name="amount"/>
+                            </li>
+                            <li class="select-time">
+                                <label>交易时间：</label>
+                                <input type="text" class="time-input" id="startTime" placeholder="开始时间" name="params[beginTxTime]"/>
+                                <span>-</span>
+                                <input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTxTime]"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="blockchain:usdtTrade:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="blockchain:usdtTrade:edit">
+                    <i class="fa fa-edit"></i> 修改
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="blockchain:usdtTrade:remove">
+                    <i class="fa fa-remove"></i> 删除
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="blockchain:usdtTrade:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('blockchain:usdtTrade:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('blockchain:usdtTrade:remove')}]];
+        var prefix = ctx + "blockchain/usdtTrade";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "USDT交易记录",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'txHash',
+                    title: '交易哈希',
+                },
+                {
+                    field: 'fromAddress',
+                    title: '发送者地址'
+                },
+                {
+                    field: 'toAddress',
+                    title: '接收者地址'
+                },
+                {
+                    field: 'amount',
+                    title: '交易金额'
+                },
+                {
+                    field: 'txTime',
+                    title: '交易时间',
+                    formatter: function (value, row, index) {
+                        return $.common.dateFormat(Number(value), "yyyy-MM-dd HH:mm:ss");
+		            }
+                },
+                {
+                    field: 'isNotify',
+                    title: '是否已通知',
+                    formatter: function (value, row, index) {
+		                return value == 0 ? '未通知': '已通知';
+		            }
+                },
+                {
+                    field: 'notifyCnt',
+                    title: '回调次数'
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>

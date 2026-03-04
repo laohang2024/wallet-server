@@ -57,6 +57,7 @@ public class BtcTrade extends BaseEntity {
     @Excel(name = "是否已通知 0-未通知 1-已通知")
     private byte isNotify;
 
+
     /**
      * 回调次数
      */
