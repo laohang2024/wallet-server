@@ -165,3 +165,11 @@ tron:
 eth:
   jsonRpcUrl: https://serene-restless-dream.quiknode.pro/f58ec5283bfbc5cbf41f59157d0185ffc3cfb13d/
   monitorSwitch: false
+
+btc:
+  jsonRpcUrl: https://go.getblock.io/e5ed9ca9613c4358a6552fc49baa2dd6
+  monitorSwitch: false
+
+tokenView:
+  apiKey: 70c4N9zd5iW7gvBtVuk5
+  host: https://services.tokenview.io
